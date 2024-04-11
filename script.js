@@ -1,122 +1,50 @@
-const cityName = document.querySelector('#weatherInput');
-const searchBtn = document.querySelector('#searchBtn');
-const form = document.getElementById('weatherForm');
-const myCity = document.getElementById('city');
-const image = document.getElementById('weatherImage');
-const weather = document.getElementById('weatherMain');
-const temp = document.querySelector('.temp');
-const dates = document.querySelector('.todayDates');
-const times = document.getElementById('todayTime');
-let date = new Date();
+const api = {
+  key: "fcc8de7015bbb202209bbf0261babf4c",
+  base: "https://api.openweathermap.org/data/2.5/"
+}
 
-// Function work when user input the city name
-form.addEventListener('submit', function (e) {
+const searchbox = document.querySelector('.search-box');
+searchbox.addEventListener('keypress', setQuery);
 
-    // preventDefault() to stop page reload
-    e.preventDefault();
+function setQuery(evt) {
+  if (evt.keyCode == 13) {
+    getResults(searchbox.value);
+  }
+}
 
-    // Updating the city name
-    let city = cityName.value;
-    const myWeatherContainer = document.querySelector('.weatherContainer');
-    const apiID = `931f131dde3f4ae2fcbc3289fc646471`;
-    // API URL
-    let url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiID}`
+function getResults (query) {
+  fetch(`${api.base}weather?q=${query}&units=metric&APPID=${api.key}`)
+    .then(weather => {
+      return weather.json();
+    }).then(displayResults);
+}
 
-    // fetching data from the weather api
-    fetch(url).then((response) => {
-        return response.json();
-    }).then((data) => {
+function displayResults (weather) {
+  let city = document.querySelector('.location .city');
+  city.innerText = `${weather.name}, ${weather.sys.country}`;
 
-        const tempValue = Math.round(data['main']['temp']);
-        const weatherMain = data['weather'][0]['main'];
-        weather.innerHTML = weatherMain;
+  let now = new Date();
+  let date = document.querySelector('.location .date');
+  date.innerText = dateBuilder(now);
 
-        // Updating the DOM
-        myCity.innerHTML = city;
-        temp.innerHTML = `${tempValue}`
-        weather.innerHTML = `${weatherMain}`
-        temp.innerHTML = `${tempValue}<span><sup>o</sup>C</span.`;
+  let temp = document.querySelector('.current .temp');
+  temp.innerHTML = `${Math.round(weather.main.temp)}<span>°c</span>`;
 
-        // Updating the Images according to the weather
-        if (weatherMain == 'Clear') {
-            image.src = `./Images/sunny.png`
-            myWeatherContainer.style.backgroundColor = '#ec6e4c'
-        }
-        if (weatherMain == 'Clouds') {
-            image.src = `./Images/clouds.png`
-            myWeatherContainer.style.backgroundColor = '#86d3d3'
-        }
-        if (weatherMain == 'Rain') {
-            image.src = `./Images/Rain.png`
-            myWeatherContainer.style.backgroundColor = '#494bcf'
-        }
-        if (weatherMain == 'Drizzle') {
-            image.src = `./Images/Drizzle.png`
-            myWeatherContainer.style.backgroundColor = '#8ecfcf'
-        }
-        if (weatherMain == 'Haze') {
-            image.src = `./Images/Drizzle.png`
-            myWeatherContainer.style.backgroundColor = '#d8ced2'
-        }
+  let weather_el = document.querySelector('.current .weather');
+  weather_el.innerText = weather.weather[0].main;
 
-        // Updating dates
-        const currentMonth = date.getMonth();
-        switch (currentMonth) {
-            case 0:
-                dates.innerHTML = `${date.getDate()}, Jan`
-                break;
-            case 1:
-                dates.innerHTML = `${date.getDate()}, Feb`
-                break;
-            case 2:
-                dates.innerHTML = `${date.getDate()}, Mar`
-                break;
-            case 3:
-                dates.innerHTML = `${date.getDate()}, Apr`
-                break;
-            case 4:
-                dates.innerHTML = `${date.getDate()}, May`
-                break;
-            case 5:
-                dates.innerHTML = `${date.getDate()}, Jun`
-                break;
-            case 6:
-                dates.innerHTML = `${date.getDate()}, Jul`
-                break;
-            case 7:
-                dates.innerHTML = `${date.getDate()}, Aug`
-                break;
-            case 8:
-                dates.innerHTML = `${date.getDate()}, Sept.`
-                break;
-            case 9:
-                dates.innerHTML = `${date.getDate()}, Oct.`
-                break;
-            case 10:
-                dates.innerHTML = `${date.getDate()}, Nov`
-                break;
-            case 11:
-                dates.innerHTML = `${date.getDate()}, Dec`
-                break;
-        }
+  let hilow = document.querySelector('.hi-low');
+  hilow.innerText = `${Math.round(weather.main.temp_min)}°c / ${Math.round(weather.main.temp_max)}°c`;
+}
 
-        // Updating times       
-        function leftInterval() {
-            const left = document.getElementById('todayTime')
-            let leftDate = new Date();
-            let hours = leftDate.getHours();
-            let minutes = leftDate.getMinutes();
-            let seconds = leftDate.getSeconds();
+function dateBuilder (d) {
+  let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-            if (hours == 0) {
-                hours = 12;
-            }
+  let day = days[d.getDay()];
+  let date = d.getDate();
+  let month = months[d.getMonth()];
+  let year = d.getFullYear();
 
-            if (hours > 12) {
-                hours = hours - 12;
-            }
-            left.innerHTML = `${hours}h: ${minutes}m: ${seconds}s`
-        }
-        setInterval(leftInterval, 1000);
-    })
-})
+  return `${day} ${date} ${month} ${year}`;
+}
